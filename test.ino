@@ -1,20 +1,29 @@
+//                    DEKLARACJA ZMIENNYCH
 const int pin_used=5;
-const int PWM_RESOLUTION=25;   //miliseconds for every wait in ConstantPwm
+char buffer[255];
+int time_took[10];
+unsigned long strt;
+unsigned long nd;
+// opóźnienie RampUp to 26ms na każde 1000ms
+// użycie -(1*time/1000) pozwoliło zmniejszyć z 26 do 5/6 na 1000ms
+//      GOOD ENOUGH
 
+
+//Z NIEWIADOMEGO POWODU PRZY UŻYCIU PWM, NIE ROBI WIĘCEJ NIŻ 350MS. PRZY TIME<100 ROBI 20 RÓŻNICY, POWYŻEJ NIE PRZEKRACZA 350 ROBOTY 
+
+//                    FUNKCJE WYKORZYSTYWANE
 void flip(int pin)
 {
   digitalWrite(pin,!digitalRead(pin));
 }
-
 void reset(int pin)
 {
   digitalWrite(pin,LOW);
 }
-
 void pwm(int pin,int percent,int time)
 {
   reset(pin);
-  for(int i=0;i<100;i++)
+  for(int i=0;i<time;i++)
   {
     flip(pin);
     delayMicroseconds(percent*10);
@@ -22,65 +31,47 @@ void pwm(int pin,int percent,int time)
     delayMicroseconds(1000 - percent*10);
   }
 }
-
-// void ConstantPwm(int pin,int percent,int time)
-// {
-//   const int div=time/PWM_RESOLUTION;
-//   for(int i=0;i<div;i++)
-//   {
-//     pwm(pin,percent);
-//     delay(PWM_RESOLUTION);
-//   }
-// }
-void RampUp(int pin,int time,int max_speed) //speed as percent 1-100
+void RampUp(int pin,int time,int max_speed) //max_speed jako procent 1-100
 {
+  // int time=time-((float)time/1000)*26;
   reset(pin);
-  const int time_step=(time/max_speed)/PWM_RESOLUTION;
+  const int time_step=(time/max_speed)-(1*time/1000);
   for(int i=0;i<max_speed;i++)
   {
-    
-    for(int j=0;j<time_step;j++)
-    {
-      pwm(pin,i);
-      delay(PWM_RESOLUTION);
-    }
-    
+   pwm(pin,i,time_step);
   }
 }
-unsigned long strt;
-unsigned long nd;
+float AverageOfArray (int * array, int len)
+{
+  long sum = 0L ;
+  for (int i = 0 ; i < len ; i++)
+    sum += array [i] ;
+  return  ((float) sum) / len ;
+}
+
+
 void setup() {
   pinMode(pin_used, OUTPUT);
   Serial.begin(115200);
-  
 }
-
-// the loop function runs over and over again forever
+int time=100;
 void loop() {
- 
-  // RampUp(pin_used,10000,100);
-  for (int i = 0; i < 100; i++)
-  {
-    strt=millis();
-    pwm(pin_used,i);
-    nd=millis() -strt;
-    Serial.println(i);
-    Serial.println(" took ");
-    Serial.println(nd);
-    Serial.println(" \n");
-    delay(1000);
-  }
-  
- 
-
-  
-  // Serial.print("Ramped UP");
-  // ConstantPwm(pin_used,50,5000);
-  // delay(5000);
-  // delay(5000);
-  // pwm(pin_used,50);
-  // delay(5000);
-
+  // for (int i = 0; i < 10; i++)
+  // {
+  //   strt=millis();
+  //   pwm(pin_used,time,20);
+  //   nd=millis() -strt;
+  //   time_took[i]=nd-time;
+  //   Serial.println(nd);
+  // }
+  //   int avg=AverageOfArray(time_took,10);
+  //   sprintf(buffer,"%d : %d\n",time,avg);
+  //   Serial.print(buffer);
+  //   time+=100;
+  //   if(time==10000)
+  //   {
+  //     time=1000;
+  //   }
 
 
 
